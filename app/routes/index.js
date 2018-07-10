@@ -4,13 +4,21 @@ const sharp = require('sharp')
 const fs = require('fs')
 
 router.post('/', (req, res, next) => {
-  let imgBuffer = Buffer.from(req.body.imagen, 'base64')
-  sharp(imgBuffer)
-    .toFile('public/images/output/SP0001.tif')
+  let base64 = []
+  let front = Buffer.from(req.body.front, 'base64')
+  let back = Buffer.from(req.body.back, 'base64')
+
+  sharp(front)
+    .toFile('public/images/output/front.tif')
     .then(data => {
-      console.log(data)
-      let bitmap = fs.readFileSync('public/images/output/SP0001.tif')
-      res.json({'tiff-image': Buffer.from(bitmap).toString('base64')})
+      sharp(back)
+        .toFile('public/images/output/back.tif')
+        .then(data => {
+          base64.push({'front': Buffer.from(fs.readFileSync('public/images/output/front.tif')).toString('base64')})
+          base64.push({'back': Buffer.from(fs.readFileSync('public/images/output/back.tif')).toString('base64')})
+          res.json(base64)
+        })
+        .catch(err => console.log(`downsize issue ${err}`))
     })
     .catch(err => console.log(`downsize issue ${err}`))
 })
